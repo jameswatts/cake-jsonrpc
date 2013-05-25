@@ -164,7 +164,7 @@ class ServerComponent extends Component {
 		if (!isset($request->method) || !is_string($request->method) || !method_exists($this->_controller, $request->method)) {
 			return $this->_createMethodError($request);
 		}
-		if (!isset($request->params) || (!is_array($request->params) && !is_object($request->params))) {
+		if (isset($request->params) && !is_array($request->params) && !is_object($request->params)) {
 			return $this->_createParamsError($request);
 		}
 		try {
