@@ -53,7 +53,10 @@ class ClientComponent extends Component {
 				return $json->result;
 			}
 		} else {
-			throw new CakeException('Internal JSON-RPC error');
+			if (Configure::debug() > 0) {
+				debug($response);
+			}
+			throw new CakeException('Internal JSON-RPC response error');
 		}
 	}
 
@@ -82,10 +85,11 @@ class ClientComponent extends Component {
  * @param array $header The additional headers to send.
  * @param array $cookies The optional cookies to send.
  * @param string $method The HTTP method to use, defaults to POST.
+ * @param boolean $redirect Determines if the request follows redirects.
  * @throws CakeException if the HTTP status code is outside of the 200 range.
  * @return object
  */
-	public function sendJsonRequest($request, $uri, $auth = array(), $header = array(), $cookies = array(), $method = 'POST') {
+	public function sendJsonRequest($request, $uri, $auth = array(), $header = array(), $cookies = array(), $method = 'POST', $redirect = false) {
 		$http = new HttpSocket();
 		$response = $http->request(array(
 			'method' => $method,
@@ -111,17 +115,17 @@ class ClientComponent extends Component {
 				'Connection' => 'close'
 			), $header),
 			'raw' => null,
-			'redirect' => false,
+			'redirect' => $redirect,
 			'cookies' => $cookies
 		));
 		if ($response->code > 0 && $response->code < 200) {
-			throw new CakeException('Internal JSON-RPC error');
+			throw new CakeException('Internal JSON-RPC informational error ' . $response->code);
 		} else if ($response->code > 299 && $response->code < 400) {
-			throw new CakeException('Internal JSON-RPC error');
+			throw new CakeException('Internal JSON-RPC redirection error ' . $response->code);
 		} else if ($response->code > 399 && $response->code < 500) {
-			throw new CakeException('Internal JSON-RPC error');
+			throw new CakeException('Internal JSON-RPC client error ' . $response->code);
 		} else if ($response->code > 499) {
-			throw new CakeException('Internal JSON-RPC error');
+			throw new CakeException('Internal JSON-RPC server error ' . $response->code);
 		} else {
 			return $this->_processJsonResponse($response->body);
 		}
