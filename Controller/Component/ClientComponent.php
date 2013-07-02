@@ -53,7 +53,7 @@ class ClientComponent extends Component {
 				return $json->result;
 			}
 		} else {
-			if (Configure::debug() > 0) {
+			if (Configure::read('debug') > 0) {
 				debug($response);
 			}
 			throw new CakeException('Internal JSON-RPC response error');
