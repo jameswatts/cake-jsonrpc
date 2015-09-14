@@ -107,7 +107,7 @@ If you'd like to contribute new features, enhancements or bug fixes to the code 
 * Create a new [branch](https://help.github.com/articles/creating-and-deleting-branches-within-your-repository) from the *develop* branch in your forked repository
 * Modify the existing code, or add new code to your branch, making sure you follow the [CakePHP Coding Standards](http://book.cakephp.org/2.0/en/contributing/cakephp-coding-conventions.html)
 * Modify or add [unit tests](http://book.cakephp.org/2.0/en/development/testing.html) which confirm the correct functionality of your code (requires [PHPUnit](http://www.phpunit.de/manual/current/en/installation.html) 3.5+)
-* Consider using the [CakePHP Code Sniffer](https://github.com/cakephp/cakephp-codesniffer) to check the quality of your code
+* Consider using the [CakePHP Code Sniffer](https://github.com/cakephp/cakephp-codesniffer/tree/1.x) to check the quality of your code
 * When ready, make a [pull request](http://help.github.com/send-pull-requests/) to the main repository
 
 There may be some discussion reagrding your contribution to the repository before any code is merged in, so be prepared to provide feedback on your contribution if required.
