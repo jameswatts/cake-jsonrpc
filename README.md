@@ -6,32 +6,32 @@ The **Jsonrpc** plugin for *CakePHP* provides server and client implementations 
 Requirements
 ------------
 
-* CakePHP 2+
+* CakePHP 3+
 * PHP 5.3+
 
 Installation
 ------------
 
-To use the plugin simply include it in your application's "app/Plugin" directory, and load it in the "app/Config/bootstrap.php" file.
+To use the plugin simply include it in your application's "plugins" directory, and load it in the "config/bootstrap.php" file.
 
 ```php
-CakePlugin::load('Jsonrpc');
+Plugin::load('Jsonrpc');
 ```
 
-The above code is *not* required if you're already using ```CakePlugin::loadAll()``` to load all plugins.
+The above code is *not* required if you're already using ```Plugin::loadAll()``` to load all plugins.
 
 Implementation
 --------------
 
 ### Server
 
-The [Jsonrpc.Server](Controller/Component/ServerComponent.php) component allows a *CakePHP* application to listen for incoming **JSON-RPC** calls. The actions listening are defined in the "listen" option of the component's settings. To add the component to your controller acting as the end-point include it in your *$components* property, for example:
+The [Jsonrpc.Server](Controller/Component/ServerComponent.php) component allows a *CakePHP* application to listen for incoming **JSON-RPC** calls. The actions listening are defined in the "listen" option of the component's settings. To add the component to your controller acting as the end-point include it in your *initialize* method, for example:
 
 ```php
-public $components = array(
-	'Jsonrpc.Server' => array(
+public function initialize() {
+	$this->loadComponent('Jsonrpc.Server', [
 		'listen' => array('example') // will process JSON-RPC requests sent to this action
-	)
+	]);
 );
 ```
 
@@ -51,10 +51,12 @@ In order to send an error as the response you need only throw an *Exception* in 
 
 ### Client
 
-The [Jsonrpc.Client](Controller/Component/ClientComponent.php) component allows a *CakePHP* application to make **JSON-RPC** requests to a server. To use the component add it to the *$components* property of your controller, for example:
+The [Jsonrpc.Client](Controller/Component/ClientComponent.php) component allows a *CakePHP* application to make **JSON-RPC** requests to a server. To use the component add it to the *initialize* method of your controller, for example:
 
 ```php
-public $components = array('Jsonrpc.Client');
+public function initialize() {
+	$this->loadComponent('Jsonrpc.Client');
+}
 ```
 
 From your actions you can now make requests using the **Client** component. To do so, first create a JSON request object, and then send it to the **JSON-RPC** server.

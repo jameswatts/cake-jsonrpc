@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Component for providing a JSON-RPC server.
  *
@@ -12,11 +13,13 @@
  * @copyright     Copyright 2013, James Watts (http://github.com/jameswatts)
  * @link          http://www.jsonrpc.org/specification
  * @package       Jsonrpc.Controller.Component
- * @since         CakePHP(tm) v 2.2.0.0
+ * @since         CakePHP(tm) v 3.1.4.0
  * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
 
-App::uses('Component', 'Controller');
+namespace Jsonrpc\Controller\Component;
+
+use Cake\Controller\Component;
 
 class ServerComponent extends Component {
 
@@ -39,7 +42,7 @@ class ServerComponent extends Component {
  *
  * @var string
  */
-	protected $_version = '2.0';
+	protected $_version = '3.0';
 
 /**
  * Returns a abase JSON-RPC error object.
@@ -198,7 +201,7 @@ class ServerComponent extends Component {
  * @param Controller $controller Controller with components to beforeRender.
  * @return void
  */
-	public function startup(Controller $controller) {
+	public function startup($controller) {
 		$this->_controller = $controller;
 		if (!empty($this->listen) && ((is_string($this->listen) && $this->listen == $controller->action) || (is_array($this->listen) && in_array($controller->action, $this->listen)))) {
 			if ($controller->request->is('post')) {

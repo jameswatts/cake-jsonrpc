@@ -12,12 +12,12 @@
  * @copyright     Copyright 2013, James Watts (http://github.com/jameswatts)
  * @link          http://www.jsonrpc.org/specification
  * @package       Jsonrpc.Controller.Component
- * @since         CakePHP(tm) v 2.2.0.0
+ * @since         CakePHP(tm) v 3.1.4.0
  * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
 
-App::uses('Component', 'Controller');
-App::uses('HttpSocket', 'Network/Http');
+use Cake\Component\Controller;
+use Cake\Network\Http;
 
 class ClientComponent extends Component {
 
@@ -26,7 +26,7 @@ class ClientComponent extends Component {
  *
  * @var string
  */
-	protected $_version = '2.0';
+	protected $_version = '3.0';
 
 /**
  * The current request count.
