@@ -16,8 +16,13 @@
  * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
 
-use Cake\Component\Controller;
-use Cake\Network\Http;
+namespace Jsonrpc\Controller\Component;
+
+use Cake\Controller\Component;
+// use Cake\Component\Controller;
+use Cake\Network\Http\Client;
+use Cake\Core\Exception\Exception;
+use Cake\Log\Log;
 
 class ClientComponent extends Component {
 
@@ -26,7 +31,7 @@ class ClientComponent extends Component {
  *
  * @var string
  */
-	protected $_version = '3.0';
+	protected $_version = '2.0';
 
 /**
  * The current request count.
@@ -68,7 +73,7 @@ class ClientComponent extends Component {
  * @return object
  */
 	public function createJsonRequest($method, $params = null) {
-		$request = new stdClass();
+		$request = (object) [];//new stdClass();
 		$request->jsonrpc = $this->_version;
 		$request->method = (string) $method;
 		$request->params = $params;
@@ -90,42 +95,59 @@ class ClientComponent extends Component {
  * @return object
  */
 	public function sendJsonRequest($request, $uri, $auth = array(), $header = array(), $cookies = array(), $method = 'POST', $redirect = false) {
-		$http = new HttpSocket();
-		$response = $http->request(array(
-			'method' => $method,
-			'uri' => array_merge(array(
-				'scheme' => 'http',
-				'host' => null,
-				'port' => 80,
-				'user' => null,
-				'pass' => null,
-				'path' => null,
-				'query' => null,
-				'fragment' => null
-			), $uri),
+
+		$uri = array_merge(array(
+			'scheme' => 'http',
+			'host' => null,
+			'port' => null,
+			'user' => null,
+			'pass' => null,
+			'path' => null,
+			'query' => null,
+			'fragment' => null
+		), $uri);
+		$url = http_build_url($uri);
+
+		// debug($url); exit;
+
+		$data = [
+			// 'version' => '1.1',
+			'_content' => json_encode($request),
+			// 'line' => null,
+		];
+
+		$options = [
 			'auth' => array_merge(array(
 				'method' => 'Basic',
 				'user' => null,
 				'pass' => null
 			), $auth),
-			'version' => '1.1',
-			'body' => json_encode($request),
-			'line' => null,
-			'header' => array_merge(array(
+			'headers' => array_merge(array(
 				'Connection' => 'close'
 			), $header),
 			'raw' => null,
 			'redirect' => $redirect,
-			'cookies' => $cookies
-		));
+			'cookies' => $cookies,
+			'type' => 'json'
+		];
+
+		$http = new Client();
+		$response = $http->{strtolower($method)}($url, $data, $options);
+
+		Log::write('debug', 'URL: '.json_encode($url));
+		Log::write('debug', 'Data: '.$data['_content']);
+		Log::write('debug', 'Options: '.json_encode($options));
+		Log::write('debug', 'Response: '.json_encode($response));
+
+		# @TODO: Proper Cake 3 Exception Handling
 		if ($response->code > 0 && $response->code < 200) {
-			throw new CakeException('Internal JSON-RPC informational error ' . $response->code);
+			throw new Exception('Internal JSON-RPC informational error ' . $response->code);
 		} else if ($response->code > 299 && $response->code < 400) {
-			throw new CakeException('Internal JSON-RPC redirection error ' . $response->code);
+			throw new Exception('Internal JSON-RPC redirection error ' . $response->code);
 		} else if ($response->code > 399 && $response->code < 500) {
-			throw new CakeException('Internal JSON-RPC client error ' . $response->code);
+			throw new Exception('Internal JSON-RPC client error ' . $response->code);
 		} else if ($response->code > 499) {
-			throw new CakeException('Internal JSON-RPC server error ' . $response->code);
+			throw new Exception('Internal JSON-RPC server error ' . $response->code);
 		} else {
 			return $this->_processJsonResponse($response->body);
 		}

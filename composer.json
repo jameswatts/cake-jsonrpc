@@ -25,7 +25,8 @@
 	},
 	"require": {
 		"php": ">=5.3.0",
-		"composer/installers": "*"
+		"composer/installers": "*",
+    "jakeasmith/http_build_url": "^1" // To allow/enable http_build_url
 	},
 	"extra": {
 		"installer-name": "Jsonrpc"
