@@ -79,6 +79,9 @@ class ClientComponent extends Component {
 		$request->method = (string) $method;
 		$request->params = $params;
 		$request->id = $this->_requestCount++;
+
+		$this->log(json_encode($params));
+
 		return $request;
 	}
 
@@ -110,11 +113,9 @@ class ClientComponent extends Component {
 		), $uri);
 		$url = http_build_url($uri);
 
-		$data = [
-			// 'version' => '1.1',
-			'_content' => json_encode($request),
-			// 'line' => null,
-		];
+		$data = json_encode($request);
+
+		$this->log($data, 'debug');
 
 		$options = [
 			'auth' => array_merge(array(
@@ -132,7 +133,7 @@ class ClientComponent extends Component {
 		];
 
 		$http = new Client();
-		$response = $http->{strtolower($method)}($url, json_encode($request), $options);
+		$response = $http->{strtolower($method)}($url, $data, $options);
 
 		# @TODO: Proper Cake 3 Exception Handling
 		if ($response->code > 0 && $response->code < 200) {
