@@ -48,12 +48,13 @@ class ClientComponent extends Component {
  * @return string
  */
 	protected function _processJsonResponse($response) {
+
 		$json = json_decode(trim($response));
 		if (is_array($json) && count($json) > 0) {
 			return $json;
 		} else if (is_object($json)) {
 			if (isset($json->error)) {
-				throw new CakeException((string) $json->error->message, (int) $json->error->code);
+				throw new Exception((string) $json->error->message, (int) $json->error->code);
 			} else {
 				return $json->result;
 			}
@@ -61,7 +62,7 @@ class ClientComponent extends Component {
 			if (Configure::read('debug') > 0) {
 				debug($response);
 			}
-			throw new CakeException('Internal JSON-RPC response error');
+			throw new Exception('Internal JSON-RPC response error');
 		}
 	}
 
@@ -96,6 +97,7 @@ class ClientComponent extends Component {
  */
 	public function sendJsonRequest($request, $uri, $auth = array(), $header = array(), $cookies = array(), $method = 'POST', $redirect = false) {
 
+
 		$uri = array_merge(array(
 			'scheme' => 'http',
 			'host' => null,
@@ -107,8 +109,6 @@ class ClientComponent extends Component {
 			'fragment' => null
 		), $uri);
 		$url = http_build_url($uri);
-
-		// debug($url); exit;
 
 		$data = [
 			// 'version' => '1.1',
@@ -132,12 +132,7 @@ class ClientComponent extends Component {
 		];
 
 		$http = new Client();
-		$response = $http->{strtolower($method)}($url, $data, $options);
-
-		Log::write('debug', 'URL: '.json_encode($url));
-		Log::write('debug', 'Data: '.$data['_content']);
-		Log::write('debug', 'Options: '.json_encode($options));
-		Log::write('debug', 'Response: '.json_encode($response));
+		$response = $http->{strtolower($method)}($url, json_encode($request), $options);
 
 		# @TODO: Proper Cake 3 Exception Handling
 		if ($response->code > 0 && $response->code < 200) {
