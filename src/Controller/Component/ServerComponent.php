@@ -20,7 +20,7 @@
 namespace Jsonrpc\Controller\Component;
 
 use Cake\Controller\Component;
-use Cake\Event\Event;
+use Cake\Core\Configure;
 
 class ServerComponent extends Component {
 
@@ -70,7 +70,7 @@ class ServerComponent extends Component {
  * @return object
  */
 	protected function _createParseError($request = null) {
-		return $this->_createJsonError(-32700, 'Parse error', null);
+		return $this->_createJsonError(-32700, 'Parse error: '.json_encode($request), null);
 	}
 
 /**
@@ -141,10 +141,8 @@ class ServerComponent extends Component {
  * @return array|object|null
  */
 	protected function _processJsonRequest() {
-
 		$input = trim($this->request->input());
 		$data = json_decode($input);
-
 		if (is_array($data)) {
 			return $data;
 		} else if (is_object($data)) {
@@ -161,22 +159,22 @@ class ServerComponent extends Component {
  * @return array
  */
 	protected function _parseJsonRequest($request) {
-
 		if (!is_object($request)) {
 			return $this->_createParseError($request);
 		}
 		if (!isset($request->jsonrpc) || !is_string($request->jsonrpc) || $request->jsonrpc !== $this->_version) {
 			return $this->_createRequestError($request);
 		}
-		if (!isset($request->method) || !is_string($request->method) || !method_exists($this->_controller, $request->method)) {
+		if (!isset($request->method) || !is_string($request->method) || !method_exists($this->_controller->subject, $request->method)) {
 			return $this->_createMethodError($request);
 		}
 		if (isset($request->params) && !is_array($request->params) && !is_object($request->params)) {
 			return $this->_createParamsError($request);
 		}
 		try {
+
 			ob_start();
-			$result = call_user_func_array(array($this->_controller, $request->method), array($request));
+			$result = call_user_func_array(array($this->_controller->subject, $request->method), array($request));
 			ob_end_clean();
 			return $this->_processJsonResponse($request, $result);
 		} catch(Exception $e) {
@@ -192,7 +190,7 @@ class ServerComponent extends Component {
  * @return object
  */
 	protected function _processJsonResponse($request, $result) {
-		$object = new stdClass();
+		$object = (object) [];
 		$object->jsonrpc = $this->_version;
 		$object->result = $result;
 		$object->id = (isset($request) && is_object($request) && isset($request->id))? $request->id : null;
@@ -206,32 +204,33 @@ class ServerComponent extends Component {
  * @return void
  */
 	public function startup($controller) {
-
 		$this->_controller = $controller;
 
-		if (!empty($this->config('listen')) && ((is_string($this->config('listen')) && $this->config('listen') == $this->request->action) || (is_array($this->config('listen')) && in_array($this->request->action, $this->config('listen'))))) {
-
-			if($this->request->is('post') || $this->request->is('get')) {
+		if (!empty($this->config('listen')) && ((is_string($this->config('listen')) && $this->config('listen') == $this->request->params['action']) || (is_array($this->config('listen')) && in_array($this->request->params['action'], $this->config('listen'))))) {
+			if ($this->request->is('post')) { # Live
+			// if ($this->request->is('post') || $this->request->is('get')) {  # Test
 				$this->response->statusCode(200);
 				$requests = $this->_processJsonRequest();
 
+				# Shortcut
+				$response = $this->_controller->subject->response;
+
 				if (is_object($requests)) {
-					$this->response->body(json_encode($this->_parseJsonRequest($requests)));
+					$response->body(json_encode($this->_parseJsonRequest($requests)));
 				} else if (is_array($requests)) {
 					$responses = array();
 					for ($i = 0; $i < count($requests); $i++) {
 						$responses[] = $this->_parseJsonRequest($requests[$i]);
 					}
-					$this->response->body(json_encode($responses));
+					$response->body(json_encode($responses));
 				} else {
-					$this->response->body(json_encode($this->_parseJsonRequest($requests)));
+					$response->body(json_encode($this->_parseJsonRequest($requests)));
 				}
 			} else {
-				$this->response->statusCode(405);
+				$response->statusCode(405);
 			}
-
-			$this->response->send();
-			$this->response->stop();
+			$response->send();
+			$response->stop();
 		}
 	}
 
