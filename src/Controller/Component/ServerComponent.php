@@ -21,7 +21,6 @@ namespace Jsonrpc\Controller\Component;
 
 use Cake\Controller\Component;
 use Cake\Event\Event;
-use Cake\Log\Log;
 
 class ServerComponent extends Component {
 
@@ -45,11 +44,6 @@ class ServerComponent extends Component {
  * @var string
  */
 	protected $_version = '2.0';
-
-	// public function initialize(Cake\Controller\Component $config) {
-	// 	parent::initialize($config);
-	// 	$this->loadComponent('RequestHandler');
-	// }
 
 /**
  * Returns a abase JSON-RPC error object.
@@ -148,16 +142,8 @@ class ServerComponent extends Component {
  */
 	protected function _processJsonRequest() {
 
-		// debug($this->request); exit;
-
-		// debug($this->request->input());
-		// exit;
-
 		$input = trim($this->request->input());
 		$data = json_decode($input);
-
-		// debug($input);
-		// exit;
 
 		if (is_array($data)) {
 			return $data;
@@ -175,8 +161,6 @@ class ServerComponent extends Component {
  * @return array
  */
 	protected function _parseJsonRequest($request) {
-
-		// debug($request);
 
 		if (!is_object($request)) {
 			return $this->_createParseError($request);
@@ -223,28 +207,13 @@ class ServerComponent extends Component {
  */
 	public function startup($controller) {
 
-		// debug(get_class_methods($controller->subject())); exit;
-		// debug(get_class_methods($controller));exit;
-
-		// debug($controller); exit;
-		// pr($this); exit;
-
 		$this->_controller = $controller;
 
-		// debug(get_class_methods($this->_controller)); exit;
-		// debug($this->_controller->request->config());
-
-		// debug($this->_controller); exit;
-
 		if (!empty($this->config('listen')) && ((is_string($this->config('listen')) && $this->config('listen') == $this->request->action) || (is_array($this->config('listen')) && in_array($this->request->action, $this->config('listen'))))) {
-
-			Log::write('debug', 'Request: '.json_encode($this->request));
 
 			if($this->request->is('post') || $this->request->is('get')) {
 				$this->response->statusCode(200);
 				$requests = $this->_processJsonRequest();
-				// debug($requests);
-				// die('cool');
 
 				if (is_object($requests)) {
 					$this->response->body(json_encode($this->_parseJsonRequest($requests)));
@@ -260,8 +229,6 @@ class ServerComponent extends Component {
 			} else {
 				$this->response->statusCode(405);
 			}
-
-			// debug(get_class_methods($this->response)); exit;
 
 			$this->response->send();
 			$this->response->stop();

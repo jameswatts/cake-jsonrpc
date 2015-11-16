@@ -19,10 +19,8 @@
 namespace Jsonrpc\Controller\Component;
 
 use Cake\Controller\Component;
-// use Cake\Component\Controller;
 use Cake\Network\Http\Client;
 use Cake\Core\Exception\Exception;
-use Cake\Log\Log;
 
 class ClientComponent extends Component {
 
@@ -59,7 +57,7 @@ class ClientComponent extends Component {
 				return $json->result;
 			}
 		} else {
-			if (Configure::read('debug') > 0) {
+			if (Configure::read('debug')) {
 				debug($response);
 			}
 			throw new Exception('Internal JSON-RPC response error');
@@ -100,7 +98,6 @@ class ClientComponent extends Component {
  */
 	public function sendJsonRequest($request, $uri, $auth = array(), $header = array(), $cookies = array(), $method = 'POST', $redirect = false) {
 
-
 		$uri = array_merge(array(
 			'scheme' => 'http',
 			'host' => null,
@@ -114,8 +111,6 @@ class ClientComponent extends Component {
 		$url = http_build_url($uri);
 
 		$data = json_encode($request);
-
-		$this->log($data, 'debug');
 
 		$options = [
 			'auth' => array_merge(array(
