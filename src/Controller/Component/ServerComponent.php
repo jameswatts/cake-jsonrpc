@@ -162,8 +162,6 @@ class ServerComponent extends Component {
  */
 	protected function _parseJsonRequest($request) {
 
-		// debug($request);
-
 		if (!is_object($request)) {
 			return $this->_createParseError($request);
 		}

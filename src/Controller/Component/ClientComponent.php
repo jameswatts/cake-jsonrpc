@@ -19,10 +19,8 @@
 namespace Jsonrpc\Controller\Component;
 
 use Cake\Controller\Component;
-// use Cake\Component\Controller;
 use Cake\Network\Http\Client;
 use Cake\Core\Exception\Exception;
-use Cake\Log\Log;
 
 class ClientComponent extends Component {
 
@@ -48,20 +46,21 @@ class ClientComponent extends Component {
  * @return string
  */
 	protected function _processJsonResponse($response) {
+
 		$json = json_decode(trim($response));
 		if (is_array($json) && count($json) > 0) {
 			return $json;
 		} else if (is_object($json)) {
 			if (isset($json->error)) {
-				throw new CakeException((string) $json->error->message, (int) $json->error->code);
+				throw new Exception((string) $json->error->message, (int) $json->error->code);
 			} else {
 				return $json->result;
 			}
 		} else {
-			if (Configure::read('debug') > 0) {
+			if (Configure::read('debug')) {
 				debug($response);
 			}
-			throw new CakeException('Internal JSON-RPC response error');
+			throw new Exception('Internal JSON-RPC response error');
 		}
 	}
 
@@ -78,6 +77,9 @@ class ClientComponent extends Component {
 		$request->method = (string) $method;
 		$request->params = $params;
 		$request->id = $this->_requestCount++;
+
+		$this->log(json_encode($params));
+
 		return $request;
 	}
 
@@ -108,13 +110,7 @@ class ClientComponent extends Component {
 		), $uri);
 		$url = http_build_url($uri);
 
-		// debug($url); exit;
-
-		$data = [
-			// 'version' => '1.1',
-			'_content' => json_encode($request),
-			// 'line' => null,
-		];
+		$data = json_encode($request);
 
 		$options = [
 			'auth' => array_merge(array(
@@ -133,11 +129,6 @@ class ClientComponent extends Component {
 
 		$http = new Client();
 		$response = $http->{strtolower($method)}($url, $data, $options);
-
-		Log::write('debug', 'URL: '.json_encode($url));
-		Log::write('debug', 'Data: '.$data['_content']);
-		Log::write('debug', 'Options: '.json_encode($options));
-		Log::write('debug', 'Response: '.json_encode($response));
 
 		# @TODO: Proper Cake 3 Exception Handling
 		if ($response->code > 0 && $response->code < 200) {
