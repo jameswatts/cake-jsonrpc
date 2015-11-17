@@ -57,9 +57,6 @@ class ClientComponent extends Component {
 				return $json->result;
 			}
 		} else {
-			if (Configure::read('debug')) {
-				debug($response);
-			}
 			throw new Exception('Internal JSON-RPC response error');
 		}
 	}
@@ -77,8 +74,6 @@ class ClientComponent extends Component {
 		$request->method = (string) $method;
 		$request->params = $params;
 		$request->id = $this->_requestCount++;
-
-		$this->log(json_encode($params));
 
 		return $request;
 	}
