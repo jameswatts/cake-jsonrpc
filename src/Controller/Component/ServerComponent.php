@@ -207,13 +207,14 @@ class ServerComponent extends Component {
 		$this->_controller = $controller;
 
 		if (!empty($this->config('listen')) && ((is_string($this->config('listen')) && $this->config('listen') == $this->request->params['action']) || (is_array($this->config('listen')) && in_array($this->request->params['action'], $this->config('listen'))))) {
+			# Shortcut
+			$response = $this->_controller->subject->response;
+
 			if ($this->request->is('post')) { # Live
 			// if ($this->request->is('post') || $this->request->is('get')) {  # Test
 				$this->response->statusCode(200);
 				$requests = $this->_processJsonRequest();
 
-				# Shortcut
-				$response = $this->_controller->subject->response;
 
 				if (is_object($requests)) {
 					$response->body(json_encode($this->_parseJsonRequest($requests)));
