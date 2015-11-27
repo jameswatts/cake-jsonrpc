@@ -12,12 +12,15 @@
  * @copyright     Copyright 2013, James Watts (http://github.com/jameswatts)
  * @link          http://www.jsonrpc.org/specification
  * @package       Jsonrpc.Controller.Component
- * @since         CakePHP(tm) v 2.2.0.0
+ * @since         CakePHP(tm) v 3.1.4.0
  * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
 
-App::uses('Component', 'Controller');
-App::uses('HttpSocket', 'Network/Http');
+namespace Jsonrpc\Controller\Component;
+
+use Cake\Controller\Component;
+use Cake\Network\Http\Client;
+use Cake\Core\Exception\Exception;
 
 class ClientComponent extends Component {
 
@@ -43,20 +46,18 @@ class ClientComponent extends Component {
  * @return string
  */
 	protected function _processJsonResponse($response) {
+
 		$json = json_decode(trim($response));
 		if (is_array($json) && count($json) > 0) {
 			return $json;
 		} else if (is_object($json)) {
 			if (isset($json->error)) {
-				throw new CakeException((string) $json->error->message, (int) $json->error->code);
+				throw new Exception((string) $json->error->message, (int) $json->error->code);
 			} else {
 				return $json->result;
 			}
 		} else {
-			if (Configure::read('debug') > 0) {
-				debug($response);
-			}
-			throw new CakeException('Internal JSON-RPC response error');
+			throw new Exception('Internal JSON-RPC response error');
 		}
 	}
 
@@ -68,11 +69,12 @@ class ClientComponent extends Component {
  * @return object
  */
 	public function createJsonRequest($method, $params = null) {
-		$request = new stdClass();
+		$request = (object) [];//new stdClass();
 		$request->jsonrpc = $this->_version;
 		$request->method = (string) $method;
 		$request->params = $params;
 		$request->id = $this->_requestCount++;
+
 		return $request;
 	}
 
@@ -90,42 +92,48 @@ class ClientComponent extends Component {
  * @return object
  */
 	public function sendJsonRequest($request, $uri, $auth = array(), $header = array(), $cookies = array(), $method = 'POST', $redirect = false) {
-		$http = new HttpSocket();
-		$response = $http->request(array(
-			'method' => $method,
-			'uri' => array_merge(array(
-				'scheme' => 'http',
-				'host' => null,
-				'port' => 80,
-				'user' => null,
-				'pass' => null,
-				'path' => null,
-				'query' => null,
-				'fragment' => null
-			), $uri),
+
+		$uri = array_merge(array(
+			'scheme' => 'http',
+			'host' => null,
+			'port' => null,
+			'user' => null,
+			'pass' => null,
+			'path' => null,
+			'query' => null,
+			'fragment' => null
+		), $uri);
+		$url = http_build_url($uri);
+
+		$data = json_encode($request);
+
+		$options = [
 			'auth' => array_merge(array(
 				'method' => 'Basic',
 				'user' => null,
 				'pass' => null
 			), $auth),
-			'version' => '1.1',
-			'body' => json_encode($request),
-			'line' => null,
-			'header' => array_merge(array(
+			'headers' => array_merge(array(
 				'Connection' => 'close'
 			), $header),
 			'raw' => null,
 			'redirect' => $redirect,
-			'cookies' => $cookies
-		));
+			'cookies' => $cookies,
+			'type' => 'json'
+		];
+
+		$http = new Client();
+		$response = $http->{strtolower($method)}($url, $data, $options);
+
+		# @TODO: Proper Cake 3 Exception Handling
 		if ($response->code > 0 && $response->code < 200) {
-			throw new CakeException('Internal JSON-RPC informational error ' . $response->code);
+			throw new Exception('Internal JSON-RPC informational error ' . $response->code);
 		} else if ($response->code > 299 && $response->code < 400) {
-			throw new CakeException('Internal JSON-RPC redirection error ' . $response->code);
+			throw new Exception('Internal JSON-RPC redirection error ' . $response->code);
 		} else if ($response->code > 399 && $response->code < 500) {
-			throw new CakeException('Internal JSON-RPC client error ' . $response->code);
+			throw new Exception('Internal JSON-RPC client error ' . $response->code);
 		} else if ($response->code > 499) {
-			throw new CakeException('Internal JSON-RPC server error ' . $response->code);
+			throw new Exception('Internal JSON-RPC server error ' . $response->code);
 		} else {
 			return $this->_processJsonResponse($response->body);
 		}
