@@ -32,7 +32,7 @@ public function initialize() {
 	$this->loadComponent('Jsonrpc.Server', [
 		'listen' => array('example') // will process JSON-RPC requests sent to this action
 	]);
-);
+}
 ```
 
 Once available, the server will now listen on the actions specified in the "listen" setting. When a call is made to one of these actions, and assuming no error occurs previously in the processing of the request, the call will be delegated to the controller method defined in the "method" property of the JSON request object. This method will receive a single argument, which is the JSON request object received by the server. The value returned by this method will be JSON encoded, and sent back to the client in the "result" property of the JSON response object.
@@ -44,7 +44,7 @@ public function user($request) {
 	} else {
 		throw new Exception('No user ID was specified', 123);
 	}
-);
+}
 ```
 
 In order to send an error as the response you need only throw an *Exception* in your controller's method. This will be caught by the **Server** component and processed as a JSON error object.
@@ -65,9 +65,10 @@ From your actions you can now make requests using the **Client** component. To d
 public function getUser() {
 	// create a JSON request object
 	$request = $this->Client->createJsonRequest('user', array('userId' => 7));
-	// send the request to the server and return the result
+
+        // send the request to the server and return the result
 	return $this->Client->sendJsonRequest($request, array('host' => 'example.com', 'path' => '/api/call'));
-);
+}
 ```
 
 Keep in mind that if a JSON error object is returned from the server this will be thrown as a *CakeException* in your application.
@@ -82,9 +83,10 @@ public function getAllTheThings() {
 		$this->Client->createJsonRequest('jacket', array('jacketId' => 55)),
 		$this->Client->createJsonRequest('shoes', array('shoesId' => 73))
 	);
+	
 	// send the array of requests to the server and return the results as an array
 	return $this->Client->sendJsonRequest($batch);
-);
+}
 ```
 
 When sending batch requests, if one of the request returns a JSON error object a *CakeException* will not be thrown, as the error object is returned within the array. Also, be aware that the order of the JSON response objects may not be coherent with the order of the requests sent, so always use the ID to determine the response corresponding with your request.
